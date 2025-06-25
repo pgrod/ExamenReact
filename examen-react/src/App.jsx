@@ -1,35 +1,97 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import ListaEmpleado from './components/ListaEmpleado';
+import ModalEmpleado from './components/ModalEmpleado';
+import Swal from 'sweetalert2';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [empleados, setEmpleados] = useState([]);
+  const [empleado, setEmpleado] = useState({
+    nombre: '',
+    dni: '',
+    direccion: '',
+    email: ''
+  });
+
+  const API_URL = 'https://674c84c054e1fca9290cd05f.mockapi.io/api/examen/empleado';
+
+  const obtenerEmpleados = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      setEmpleados(res.data);
+    } catch (error) {
+      Swal.fire('Error', 'No se pudo obtener la lista de empleados', 'error');
+    }
+  };
+
+  const guardarEmpleado = async () => {
+    if (!empleado.nombre || !empleado.dni || !empleado.direccion || !empleado.email) {
+      Swal.fire('Error', 'Todos los campos son obligatorios', 'error');
+      return;
+    }
+
+    try {
+      await axios.post(API_URL, empleado);
+      Swal.fire('Éxito', 'Empleado guardado correctamente', 'success');
+      
+      limpiarFormulario();
+      obtenerEmpleados();
+      cerrarModal();
+    } catch (error) {
+      Swal.fire('Error', 'No se pudo guardar el empleado', 'error');
+    }
+  };
+
+  const limpiarFormulario = () => {
+    setEmpleado({ nombre: '', dni: '', direccion: '', email: '' });
+  };
+
+  const cerrarModal = () => {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalEmpleado'));
+    if (modal) {
+      modal.hide();
+    }
+  };
+
+  const abrirModalAgregar = () => {
+    limpiarFormulario();
+  };
+
+  useEffect(() => {
+    obtenerEmpleados();
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="container mt-5">
+      <div className="row">
+        <div className="col-md-12">
+          <h1 className="text-center mb-4">
+            <i className="fas fa-users"></i> Gestión de Empleados
+          </h1>
+          
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h3>Lista de Empleados ({empleados.length})</h3>
+            <button 
+              className="btn btn-success" 
+              data-bs-toggle="modal" 
+              data-bs-target="#modalEmpleado"
+              onClick={abrirModalAgregar}
+            >
+              <i className="fas fa-plus"></i> Agregar Empleado
+            </button>
+          </div>
 
-export default App
+          <ListaEmpleado empleados={empleados} />
+
+          <ModalEmpleado 
+            empleado={empleado} 
+            setEmpleado={setEmpleado} 
+            guardarEmpleado={guardarEmpleado}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
